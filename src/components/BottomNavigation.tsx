@@ -6,7 +6,7 @@ import { RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type BottomNavigationProps = {
-  currentScreen: 'trades' | 'profile';
+  currentScreen: 'trades' | 'profile' | 'product' | 'messages';
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -15,7 +15,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentScreen }) =>
   const navigation = useNavigation<NavigationProp>();
 
   const handleNavigate = (screen: keyof RootStackParamList) => {
-    if (screen.toLowerCase() === currentScreen) return;
+    if (currentScreen === screen.toLowerCase()) return;
     navigation.navigate(screen);
   };
 
@@ -29,14 +29,17 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentScreen }) =>
           source={require('../assets/home-icon.png')}
           style={[
             styles.navIcon,
-            currentScreen === 'trades' && styles.activeIcon
+            { tintColor: currentScreen === 'trades' ? COLORS.primary : COLORS.gray }
           ]}
         />
       </TouchableOpacity>
       <TouchableOpacity style={styles.navItem}>
         <Image
-          source={require('../assets/recycle-icon.png')}
-          style={styles.navIcon}
+          source={require('../assets/recycling.png')}
+          style={[
+            styles.navIcon,
+            { tintColor: currentScreen === 'product' ? COLORS.primary : COLORS.gray }
+          ]}
         />
       </TouchableOpacity>
       <TouchableOpacity 
@@ -48,10 +51,16 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentScreen }) =>
           style={styles.addIcon}
         />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navItem}>
+      <TouchableOpacity 
+        style={styles.navItem}
+        onPress={() => handleNavigate('Messages')}
+      >
         <Image
-          source={require('../assets/share-icon.png')}
-          style={styles.navIcon}
+          source={require('../assets/chat-icon.png')}
+          style={[
+            styles.navIcon,
+            { tintColor: currentScreen === 'messages' ? COLORS.primary : COLORS.gray }
+          ]}
         />
       </TouchableOpacity>
       <TouchableOpacity 
@@ -62,7 +71,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentScreen }) =>
           source={require('../assets/profile-icon.png')}
           style={[
             styles.navIcon,
-            currentScreen === 'profile' && styles.activeIcon
+            { tintColor: currentScreen === 'profile' ? COLORS.primary : COLORS.gray }
           ]}
         />
       </TouchableOpacity>
@@ -86,7 +95,6 @@ const styles = StyleSheet.create({
   navIcon: {
     width: 24,
     height: 24,
-    tintColor: COLORS.gray,
   },
   activeIcon: {
     tintColor: COLORS.primary,

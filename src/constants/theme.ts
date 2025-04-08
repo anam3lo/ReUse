@@ -1,12 +1,14 @@
 export const COLORS = {
-  primary: '#38BA36',
-  secondary: '#96E37A',
-  accent: '#1CB309',
-  darkGreen: '#127011',
-  lightGreen: '#8ADC89',
+  primary: '#4CAF50',
+  secondary: '#2E7D32',
+  accent: '#81C784',
+  darkGreen: '#1B5E20',
+  lightGreen: '#A5D6A7',
   white: '#FFFFFF',
   black: '#000000',
-  gray: '#808080'
+  gray: '#666666',
+  letter: '#333333',
+  red: '#FF3B30',
 }
 
 export const FONTS = {

@@ -14,6 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 import { saveProduct } from '../services/storage';
+import BottomNavigation from '../components/BottomNavigation';
 
 const categories = [
   { id: 1, label: 'Produto novo', value: 'novo' },
@@ -169,7 +170,8 @@ const ProductRegistrationScreen = ({ navigation }: any) => {
 
       <ScrollView style={styles.content}>
         {/* Fotos do produto */}
-        <Text style={styles.sectionTitle}>Fotos do produto</Text>
+        <Text style={[styles.sectionTitle, { fontFamily: FONTS.bold }]}>Fotos do produto</Text>
+
         <View style={styles.imageGrid}>
           {images.length > 0 ? (
             <>
@@ -182,7 +184,7 @@ const ProductRegistrationScreen = ({ navigation }: any) => {
                     onPress={handleAddImage}
                   >
                     <Image
-                      source={require('../assets/camera-icon.png')}
+                      source={require('../assets/chat-icon.png')}
                       style={styles.cameraIcon}
                     />
                   </TouchableOpacity>
@@ -250,38 +252,7 @@ const ProductRegistrationScreen = ({ navigation }: any) => {
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Image
-            source={require('../assets/home-icon.png')}
-            style={styles.navIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Image
-            source={require('../assets/recycle-icon.png')}
-            style={styles.navIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.navItem, styles.addButton]}>
-          <Image
-            source={require('../assets/plus-icon.png')}
-            style={styles.addIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Image
-            source={require('../assets/share-icon.png')}
-            style={styles.navIcon}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Image
-            source={require('../assets/profile-icon.png')}
-            style={styles.navIcon}
-          />
-        </TouchableOpacity>
-      </View>
+      <BottomNavigation currentScreen="product" />
     </SafeAreaView>
   );
 };
@@ -396,35 +367,8 @@ const styles = StyleSheet.create({
     fontSize: SIZES.medium,
     fontFamily: FONTS.bold,
   },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    paddingVertical: SIZES.medium,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.gray + '20',
-  },
-  navItem: {
-    alignItems: 'center',
-  },
-  navIcon: {
-    width: 24,
-    height: 24,
-  },
-  addButton: {
-    backgroundColor: COLORS.primary,
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: -25,
-  },
-  addIcon: {
-    width: 24,
-    height: 24,
-    tintColor: COLORS.white,
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
   productImage: {
     width: '100%',
@@ -454,9 +398,6 @@ const styles = StyleSheet.create({
     marginTop: SIZES.base,
     color: COLORS.gray,
     fontSize: SIZES.font,
-  },
-  submitButtonDisabled: {
-    opacity: 0.7,
   },
 });
 

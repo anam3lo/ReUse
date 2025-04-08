@@ -11,9 +11,17 @@ export const checkAuthStatus = async () => {
 
 export const logout = async () => {
   try {
-    await AsyncStorage.multiRemove(['@user_token', '@login_type']);
+    // Limpa todos os dados do usuário
+    await AsyncStorage.multiRemove([
+      '@user_token', 
+      '@login_type', 
+      '@user_data',
+      '@user_profile',
+      '@user_preferences'
+    ]);
     return true;
   } catch (error) {
+    console.error('Erro ao fazer logout:', error);
     return false;
   }
 }; 

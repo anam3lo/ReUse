@@ -45,28 +45,9 @@ const LoginScreen = ({ navigation }: any) => {
   const handlePhoneLogin = async () => {
     try {
       setIsLoading(true);
-      // Aqui você implementaria a lógica de autenticação por telefone
-      // Por enquanto, vamos simular um login bem-sucedido
-      await AsyncStorage.setItem('@user_token', 'dummy_token');
-      await AsyncStorage.setItem('@login_type', 'phone');
-      navigation.replace('Trades');
+      navigation.navigate('PhoneLogin');
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível fazer login. Tente novamente.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    try {
-      setIsLoading(true);
-      // Aqui você implementaria a lógica de autenticação com Google
-      // Por enquanto, vamos simular um login bem-sucedido
-      await AsyncStorage.setItem('@user_token', 'dummy_token');
-      await AsyncStorage.setItem('@login_type', 'google');
-      navigation.replace('Trades');
-    } catch (error) {
-      Alert.alert('Erro', 'Não foi possível fazer login com o Google. Tente novamente.');
+      Alert.alert('Erro', 'Não foi possível acessar a tela de login. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -86,10 +67,10 @@ const LoginScreen = ({ navigation }: any) => {
         </View>
 
         {/* Texto principal */}
-        <Text style={styles.title}>Lorem ipsum</Text>
-        <Text style={styles.subtitle}>dolor sit amet.</Text>
+        <Text style={styles.title}>Bem-vindo ao</Text>
+        <Text style={styles.subtitle}>ReUse</Text>
 
-        {/* Botões de login */}
+        {/* Botão de login */}
         <TouchableOpacity
           style={[styles.button, styles.phoneButton]}
           onPress={handlePhoneLogin}
@@ -108,30 +89,10 @@ const LoginScreen = ({ navigation }: any) => {
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.googleButton]}
-          onPress={handleGoogleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.black} />
-          ) : (
-            <>
-              <Image
-                source={require('../assets/google-icon.png')}
-                style={styles.buttonIcon}
-              />
-              <Text style={[styles.buttonText, styles.googleButtonText]}>
-                Login pelo Google
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
-
         {/* Link para cadastro */}
         <View style={styles.signupContainer}>
           <Text style={styles.signupText}>Não tem uma conta? </Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.signupLink}>Cadastre-se agora!</Text>
           </TouchableOpacity>
         </View>
@@ -197,9 +158,6 @@ const styles = StyleSheet.create({
   phoneButton: {
     backgroundColor: COLORS.primary,
   },
-  googleButton: {
-    backgroundColor: COLORS.lightGreen,
-  },
   buttonIcon: {
     width: 24,
     height: 24,
@@ -209,9 +167,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
     fontSize: SIZES.medium,
     fontFamily: FONTS.medium,
-  },
-  googleButtonText: {
-    color: COLORS.black,
   },
   signupContainer: {
     flexDirection: 'row',
