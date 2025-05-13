@@ -3,282 +3,200 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
-  SafeAreaView,
+  TouchableOpacity,
+  Image,
+  ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
 
-const SignUpScreen = () => {
+export default function SignUpScreen() {
   const navigation = useNavigation();
+  const { signUp } = useAuth();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [confirmEmail, setConfirmEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleCreateAccount = async () => {
-    if (!email || !confirmEmail || !password || !confirmPassword) {
-      Alert.alert('Erro', 'Por favor, preencha todos os campos.');
-      return;
-    }
-
-    if (email !== confirmEmail) {
-      Alert.alert('Erro', 'Os e-mails não correspondem.');
+  const handleSignUp = async () => {
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Erro', 'As senhas não correspondem.');
+      Alert.alert('Erro', 'As senhas não coincidem');
       return;
     }
 
     try {
-      // Aqui você implementaria a criação real da conta
-      await AsyncStorage.setItem('@user_token', 'dummy_token');
-      await AsyncStorage.setItem('@login_type', 'email');
-      await AsyncStorage.setItem('@user_data', JSON.stringify({
-        email: email,
-        rating: 0,
-        items: 0,
-        trades: 0,
-        reviews: 0
-      }));
-      
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Trades' }],
-      });
+      setLoading(true);
+      await signUp(name, email, password);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível criar sua conta. Tente novamente.');
+      Alert.alert(
+        'Erro',
+        error instanceof Error ? error.message : 'Erro ao criar conta'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handlePhoneSignUp = () => {
-    navigation.navigate('PhoneLogin');
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => navigation.goBack()}
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <TouchableOpacity
           style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <Ionicons name="chevron-back" size={24} color="black" />
-          <Text style={styles.backText}>Voltar</Text>
+          <Image
+            source={require('../assets/back-icon.png')}
+            style={styles.backIcon}
+          />
         </TouchableOpacity>
-      </View>
 
-      <View style={styles.content}>
-        <Text style={styles.title}>Cadastre-se</Text>
-        <Text style={styles.subtitle}>Informe seu e-mail e crie uma senha</Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.title}>Criar Conta</Text>
+          <Text style={styles.subtitle}>
+            Preencha seus dados para começar a trocar
+          </Text>
+        </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>E-mail</Text>
+        <View style={styles.formContainer}>
           <TextInput
             style={styles.input}
-            placeholder="Insira seu e-mail aqui"
+            placeholder="Nome completo"
+            value={name}
+            onChangeText={setName}
+            autoCapitalize="words"
+          />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            placeholderTextColor="#999"
+            autoCorrect={false}
           />
-        </View>
 
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Repita o e-mail</Text>
           <TextInput
             style={styles.input}
-            placeholder="Insira seu e-mail aqui"
-            value={confirmEmail}
-            onChangeText={setConfirmEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            placeholderTextColor="#999"
+            placeholder="Senha"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
           />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Confirmar senha"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+          />
+
+          <TouchableOpacity
+            style={[styles.signUpButton, loading && styles.signUpButtonDisabled]}
+            onPress={handleSignUp}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={COLORS.white} />
+            ) : (
+              <Text style={styles.signUpButtonText}>Criar conta</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.loginButtonText}>
+              Já tem uma conta? Faça login
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Crie uma senha</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
-              placeholder="Digite sua senha"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              placeholderTextColor="#999"
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
-                size={24}
-                color="#999"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Repita sua senha</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={[styles.input, styles.passwordInput]}
-              placeholder="Digite sua senha"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showConfirmPassword}
-              placeholderTextColor="#999"
-            />
-            <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              <Ionicons
-                name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
-                size={24}
-                color="#999"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.createButton}
-          onPress={handleCreateAccount}
-        >
-          <Text style={styles.createButtonText}>Criar conta</Text>
-        </TouchableOpacity>
-
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>Ou continue com</Text>
-          <View style={styles.divider} />
-        </View>
-
-        <TouchableOpacity 
-          style={styles.phoneButton}
-          onPress={handlePhoneSignUp}
-        >
-          <Ionicons name="call-outline" size={24} color={COLORS.primary} />
-          <Text style={styles.phoneButtonText}>Cadastrar com telefone</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+  scrollContent: {
+    flexGrow: 1,
+    padding: SIZES.padding,
   },
   backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: SIZES.padding,
   },
-  backText: {
-    fontSize: 16,
-    marginLeft: 4,
+  backIcon: {
+    width: 24,
+    height: 24,
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 24,
+  headerContainer: {
+    marginBottom: SIZES.padding * 2,
   },
   title: {
-    fontSize: 24,
+    fontSize: SIZES.extraLarge,
     fontFamily: FONTS.bold,
-    marginBottom: 8,
+    color: COLORS.black,
+    marginBottom: SIZES.base,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
+    fontSize: SIZES.font,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
   },
-  inputContainer: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 16,
-    fontFamily: FONTS.medium,
-    color: '#333',
-    marginBottom: 8,
+  formContainer: {
+    width: '100%',
   },
   input: {
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
-    paddingHorizontal: 16,
-    fontSize: 16,
+    height: 50,
+    borderWidth: 1,
+    borderColor: COLORS.gray + '40',
+    borderRadius: SIZES.radius,
+    paddingHorizontal: SIZES.padding,
+    marginBottom: SIZES.padding,
+    fontFamily: FONTS.regular,
   },
-  passwordContainer: {
-    position: 'relative',
-  },
-  passwordInput: {
-    paddingRight: 48,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 12,
-    top: 12,
-  },
-  createButton: {
-    height: 48,
+  signUpButton: {
     backgroundColor: COLORS.primary,
-    borderRadius: 24,
+    height: 50,
+    borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
+    marginBottom: SIZES.padding,
   },
-  createButtonText: {
+  signUpButtonDisabled: {
+    opacity: 0.7,
+  },
+  signUpButtonText: {
     color: COLORS.white,
-    fontSize: 16,
-    fontFamily: FONTS.medium,
+    fontSize: SIZES.medium,
+    fontFamily: FONTS.bold,
   },
-  dividerContainer: {
-    flexDirection: 'row',
+  loginButton: {
     alignItems: 'center',
-    marginVertical: 24,
   },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0E0E0',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: '#666',
-    fontSize: 14,
-  },
-  phoneButton: {
-    flexDirection: 'row',
-    height: 48,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  phoneButtonText: {
+  loginButtonText: {
     color: COLORS.primary,
-    fontSize: 16,
+    fontSize: SIZES.font,
     fontFamily: FONTS.medium,
   },
-});
-
-export default SignUpScreen; 
+}); 

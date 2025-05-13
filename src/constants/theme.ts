@@ -7,6 +7,8 @@ export const COLORS = {
   white: '#FFFFFF',
   black: '#000000',
   gray: '#666666',
+  lightGray: '#EEEEEE',
+  darkgray: '#333333',
   letter: '#333333',
   red: '#FF3B30',
 }
@@ -23,7 +25,9 @@ export const SIZES = {
   font: 14,
   medium: 16,
   large: 18,
-  extraLarge: 24
+  extraLarge: 24,
+  padding: 16,
+  radius: 8
 }
 
 export default { COLORS, FONTS, SIZES } 

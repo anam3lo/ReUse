@@ -1,191 +1,175 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   Image,
-  SafeAreaView,
-  Alert,
   ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { checkAuthStatus } from '../services/auth';
+import { useAuth } from '../contexts/AuthContext';
 
-const LoginScreen = ({ navigation }: any) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+export default function LoginScreen() {
+  const navigation = useNavigation();
+  const { signIn } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    checkInitialAuth();
-  }, []);
-
-  const checkInitialAuth = async () => {
-    try {
-      const isAuthenticated = await checkAuthStatus();
-      if (isAuthenticated) {
-        navigation.replace('Trades');
-      }
-    } catch (error) {
-      console.error('Erro ao verificar autenticação:', error);
-    } finally {
-      setIsCheckingAuth(false);
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      return;
     }
-  };
 
-  if (isCheckingAuth) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-      </View>
-    );
-  }
-
-  const handlePhoneLogin = async () => {
     try {
-      setIsLoading(true);
-      navigation.navigate('PhoneLogin');
+      setLoading(true);
+      await signIn(email, password);
     } catch (error) {
-      Alert.alert('Erro', 'Não foi possível acessar a tela de login. Tente novamente.');
+      Alert.alert(
+        'Erro',
+        error instanceof Error ? error.message : 'Erro ao fazer login'
+      );
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        {/* Círculo animado com imagens */}
-        <View style={styles.circleContainer}>
-          <View style={styles.circle}>
-            <Image
-              source={require('../assets/logo.png')}
-              style={styles.centerImage}
-            />
-          </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>ReUse</Text>
+          <Text style={styles.subtitle}>
+            Faça login para continuar trocando seus itens
+          </Text>
         </View>
 
-        {/* Texto principal */}
-        <Text style={styles.title}>Bem-vindo ao</Text>
-        <Text style={styles.subtitle}>ReUse</Text>
+        <View style={styles.formContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
 
-        {/* Botão de login */}
-        <TouchableOpacity
-          style={[styles.button, styles.phoneButton]}
-          onPress={handlePhoneLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.white} />
-          ) : (
-            <>
-              <Image
-                source={require('../assets/phone-icon.png')}
-                style={styles.buttonIcon}
-              />
-              <Text style={styles.buttonText}>Login pelo número</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          <TextInput
+            style={styles.input}
+            placeholder="Senha"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+          />
 
-        {/* Link para cadastro */}
-        <View style={styles.signupContainer}>
-          <Text style={styles.signupText}>Não tem uma conta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.signupLink}>Cadastre-se agora!</Text>
+          <TouchableOpacity
+            style={[styles.loginButton, loading && styles.loginButtonDisabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color={COLORS.white} />
+            ) : (
+              <Text style={styles.loginButtonText}>Entrar</Text>
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.signUpButton}
+            onPress={() => navigation.navigate('SignUp')}
+          >
+            <Text style={styles.signUpButtonText}>
+              Não tem uma conta? Cadastre-se
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.white,
   },
-  content: {
-    flex: 1,
-    alignItems: 'center',
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: SIZES.extraLarge,
+    padding: SIZES.padding,
   },
-  circleContainer: {
-    width: 250,
-    height: 250,
-    justifyContent: 'center',
+  logoContainer: {
     alignItems: 'center',
-    marginBottom: SIZES.extraLarge,
+    marginBottom: SIZES.padding * 2,
   },
-  circle: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 125,
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: COLORS.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  centerImage: {
+  logo: {
     width: 120,
     height: 120,
-    borderRadius: 60,
+    marginBottom: SIZES.padding,
   },
   title: {
-    fontSize: 32,
+    fontSize: SIZES.extraLarge * 1.5,
     fontFamily: FONTS.bold,
-    color: COLORS.black,
+    color: COLORS.primary,
     marginBottom: SIZES.base,
   },
   subtitle: {
-    fontSize: 32,
-    fontFamily: FONTS.bold,
-    color: COLORS.black,
-    marginBottom: SIZES.extraLarge * 2,
+    fontSize: SIZES.font,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
+    textAlign: 'center',
   },
-  button: {
+  formContainer: {
     width: '100%',
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: COLORS.gray + '40',
+    borderRadius: SIZES.radius,
+    paddingHorizontal: SIZES.padding,
+    marginBottom: SIZES.padding,
+    fontFamily: FONTS.regular,
+  },
+  loginButton: {
+    backgroundColor: COLORS.primary,
     height: 50,
     borderRadius: 25,
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: SIZES.medium,
+    alignItems: 'center',
+    marginBottom: SIZES.padding,
   },
-  phoneButton: {
-    backgroundColor: COLORS.primary,
+  loginButtonDisabled: {
+    opacity: 0.7,
   },
-  buttonIcon: {
-    width: 24,
-    height: 24,
-    marginRight: SIZES.base,
-  },
-  buttonText: {
+  loginButtonText: {
     color: COLORS.white,
     fontSize: SIZES.medium,
-    fontFamily: FONTS.medium,
+    fontFamily: FONTS.bold,
   },
-  signupContainer: {
-    flexDirection: 'row',
-    marginTop: SIZES.large,
+  signUpButton: {
+    alignItems: 'center',
   },
-  signupText: {
-    color: COLORS.gray,
-    fontSize: SIZES.font,
-  },
-  signupLink: {
+  signUpButtonText: {
     color: COLORS.primary,
     fontSize: SIZES.font,
     fontFamily: FONTS.medium,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
-
-export default LoginScreen; 
+}); 

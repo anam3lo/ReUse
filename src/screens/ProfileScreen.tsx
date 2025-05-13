@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,19 +10,51 @@ import {
   SafeAreaView,
   Modal,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as Location from 'expo-location';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNavigation from '../components/BottomNavigation';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 import { logout } from '../services/auth';
+import { getWeatherByCoordinates } from '../services/externalApis';
 
 export const ProfileScreen = () => {
   const navigation = useNavigation();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [weather, setWeather] = useState<any>(null);
+  const [loadingWeather, setLoadingWeather] = useState(false);
+
+  useEffect(() => {
+    loadWeatherData();
+  }, []);
+
+  const loadWeatherData = async () => {
+    try {
+      setLoadingWeather(true);
+      
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permissão negada', 'Precisamos da sua localização para mostrar o clima.');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      const weatherData = await getWeatherByCoordinates(
+        location.coords.latitude,
+        location.coords.longitude
+      );
+      setWeather(weatherData);
+    } catch (error) {
+      console.error('Erro ao carregar dados do clima:', error);
+    } finally {
+      setLoadingWeather(false);
+    }
+  };
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -119,6 +151,35 @@ export const ProfileScreen = () => {
     </View>
   );
 
+  const renderWeather = () => {
+    if (loadingWeather) {
+      return (
+        <View style={styles.weatherContainer}>
+          <ActivityIndicator color={COLORS.primary} />
+        </View>
+      );
+    }
+
+    if (!weather) {
+      return null;
+    }
+
+    return (
+      <View style={styles.weatherContainer}>
+        <Text style={styles.weatherTitle}>Clima na sua região</Text>
+        <View style={styles.weatherContent}>
+          <Text style={styles.temperature}>{Math.round(weather.main.temp)}°C</Text>
+          <Text style={styles.weatherDescription}>
+            {weather.weather[0].description}
+          </Text>
+          <Text style={styles.humidity}>
+            Umidade: {weather.main.humidity}%
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderStats = () => (
     <View style={styles.statsContainer}>
       <View style={styles.statItem}>
@@ -170,6 +231,7 @@ export const ProfileScreen = () => {
       {renderHeader()}
       <ScrollView>
         {renderProfileInfo()}
+        {renderWeather()}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Seu perfil</Text>
@@ -395,6 +457,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 16,
+  },
+  weatherContainer: {
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius,
+    padding: SIZES.padding,
+    margin: SIZES.padding,
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  weatherTitle: {
+    fontSize: SIZES.large,
+    fontFamily: FONTS.medium,
+    color: COLORS.black,
+    marginBottom: SIZES.base,
+  },
+  weatherContent: {
+    alignItems: 'center',
+  },
+  temperature: {
+    fontSize: SIZES.extraLarge * 1.5,
+    fontFamily: FONTS.bold,
+    color: COLORS.primary,
+    marginBottom: SIZES.base,
+  },
+  weatherDescription: {
+    fontSize: SIZES.font,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
+    textTransform: 'capitalize',
+    marginBottom: SIZES.base,
+  },
+  humidity: {
+    fontSize: SIZES.font,
+    fontFamily: FONTS.regular,
+    color: COLORS.gray,
   },
 });
 

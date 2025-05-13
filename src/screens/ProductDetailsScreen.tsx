@@ -11,7 +11,8 @@ import {
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
-import { Product, getProducts } from '../services/storage';
+import { getProducts } from '../services/storage';
+import { Product } from '../types';
 
 const ProductDetailsScreen = () => {
   const navigation = useNavigation();
@@ -57,7 +58,7 @@ const ProductDetailsScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.chatButton}
-          onPress={() => navigation.navigate('Chat', { productId: product.id })}
+          onPress={() => navigation.navigate('Chat', { productId: product.id || '' })}
         >
           <Image
             source={require('../assets/chat-icon.png')}
@@ -75,11 +76,11 @@ const ProductDetailsScreen = () => {
 
         <View style={styles.infoContainer}>
           <Text style={styles.title}>{product.description}</Text>
-          <Text style={styles.userName}>Publicado por {product.userName || "Usuário"}</Text>
+          <Text style={styles.userName}>Publicado por {product.userEmail}</Text>
           
           <Text style={styles.sectionTitle}>Categorias</Text>
           <View style={styles.categoriesContainer}>
-            {product.categories.map((category, index) => (
+            {product.categories.map((category: string, index: number) => (
               <View key={index} style={styles.categoryTag}>
                 <Text style={styles.categoryText}>{category}</Text>
               </View>
@@ -88,8 +89,21 @@ const ProductDetailsScreen = () => {
 
           <Text style={styles.sectionTitle}>Data de publicação</Text>
           <Text style={styles.date}>
-            {new Date(product.createdAt).toLocaleDateString('pt-BR')}
+            {product.createdAt ? new Date(product.createdAt).toLocaleDateString('pt-BR') : '-'}
           </Text>
+
+          <Text style={styles.sectionTitle}>Localização</Text>
+          <View style={styles.locationContainer}>
+            <Text style={styles.locationText}>
+              {product.location.logradouro}, {product.location.bairro}
+            </Text>
+            <Text style={styles.locationText}>
+              {product.location.cidade} - {product.location.estado}
+            </Text>
+            <Text style={styles.locationText}>
+              CEP: {product.location.cep}
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -179,6 +193,18 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     textAlign: 'center',
     marginTop: SIZES.extraLarge,
+  },
+  locationContainer: {
+    backgroundColor: COLORS.lightGray,
+    padding: SIZES.padding,
+    borderRadius: SIZES.radius,
+    marginTop: SIZES.base,
+  },
+  locationText: {
+    fontSize: SIZES.font,
+    fontFamily: FONTS.regular,
+    color: COLORS.darkgray,
+    marginBottom: SIZES.base / 2,
   },
 });
 

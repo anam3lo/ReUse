@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,25 +14,9 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
 import { saveProduct } from '../services/storage';
+import { getAddressByCEP, getCategories } from '../services/externalApis';
 import BottomNavigation from '../components/BottomNavigation';
-
-const categories = [
-  { id: 1, label: 'Produto novo', value: 'novo' },
-  { id: 2, label: 'Produto usado', value: 'usado' },
-  { id: 3, label: 'Móveis', value: 'moveis' },
-  { id: 4, label: 'Produto semi-novo', value: 'semi-novo' },
-  { id: 5, label: 'Eletrônicos', value: 'eletronicos' },
-  { id: 6, label: 'Roupas', value: 'roupas' },
-  { id: 7, label: 'Eletrodoméstico', value: 'eletrodomestico' },
-  { id: 8, label: 'Esportes', value: 'esportes' },
-  { id: 9, label: 'Instrumentos', value: 'instrumentos' },
-  { id: 10, label: 'Hobbies', value: 'hobbies' },
-  { id: 11, label: 'Peças e automóveis', value: 'auto' },
-  { id: 12, label: 'Ferramentas', value: 'ferramentas' },
-  { id: 13, label: 'Infantil', value: 'infantil' },
-  { id: 14, label: 'Colecionáveis', value: 'colecao' },
-  { id: 15, label: 'Entretenimento', value: 'entretenimento' },
-];
+import { Product } from '../types';
 
 const MAX_IMAGES = 7; // 1 principal + 6 miniaturas
 
@@ -41,6 +25,50 @@ const ProductRegistrationScreen = ({ navigation }: any) => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [cep, setCep] = useState('');
+  const [address, setAddress] = useState({
+    logradouro: '',
+    bairro: '',
+    cidade: '',
+    estado: '',
+  });
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const categoriesList = await getCategories();
+      setCategories(categoriesList);
+    } catch (error) {
+      console.error('Erro ao carregar categorias:', error);
+      Alert.alert('Erro', 'Não foi possível carregar as categorias.');
+    }
+  };
+
+  const handleCepChange = async (text: string) => {
+    setCep(text);
+    
+    if (text.length === 8) {
+      setIsLoadingCep(true);
+      try {
+        const addressData = await getAddressByCEP(text);
+        setAddress({
+          logradouro: addressData.logradouro,
+          bairro: addressData.bairro,
+          cidade: addressData.localidade,
+          estado: addressData.uf,
+        });
+      } catch (error) {
+        Alert.alert('Erro', 'CEP não encontrado. Verifique o número digitado.');
+      } finally {
+        setIsLoadingCep(false);
+      }
+    }
+  };
 
   const handleBack = () => {
     navigation.goBack();
@@ -123,6 +151,11 @@ const ProductRegistrationScreen = ({ navigation }: any) => {
       return false;
     }
 
+    if (!cep.trim() || cep.length !== 8) {
+      Alert.alert('Erro', 'Digite um CEP válido.');
+      return false;
+    }
+
     return true;
   };
 
@@ -136,6 +169,10 @@ const ProductRegistrationScreen = ({ navigation }: any) => {
         description: description.trim(),
         categories: selectedCategories,
         images,
+        location: {
+          cep,
+          ...address
+        }
       });
 
       Alert.alert(
@@ -215,23 +252,48 @@ const ProductRegistrationScreen = ({ navigation }: any) => {
           onChangeText={setDescription}
         />
 
+        {/* Localização */}
+        <Text style={styles.sectionTitle}>Localização</Text>
+        <View style={styles.locationContainer}>
+          <TextInput
+            style={styles.cepInput}
+            placeholder="Digite o CEP"
+            value={cep}
+            onChangeText={handleCepChange}
+            keyboardType="numeric"
+            maxLength={8}
+          />
+          {isLoadingCep && <ActivityIndicator style={styles.cepLoader} />}
+        </View>
+
+        {address.logradouro && (
+          <View style={styles.addressContainer}>
+            <Text style={styles.addressText}>
+              {address.logradouro}, {address.bairro}
+            </Text>
+            <Text style={styles.addressText}>
+              {address.cidade} - {address.estado}
+            </Text>
+          </View>
+        )}
+
         {/* Categorias */}
         <Text style={styles.sectionTitle}>Categorias do produto</Text>
         <View style={styles.categoriesContainer}>
-          {categories.map(category => (
+          {categories.map((category, index) => (
             <TouchableOpacity
-              key={category.id}
+              key={index}
               style={[
                 styles.categoryButton,
-                selectedCategories.includes(category.value) && styles.categoryButtonSelected,
+                selectedCategories.includes(category) && styles.categoryButtonSelected,
               ]}
-              onPress={() => toggleCategory(category.value)}
+              onPress={() => toggleCategory(category)}
             >
               <Text style={[
                 styles.categoryButtonText,
-                selectedCategories.includes(category.value) && styles.categoryButtonTextSelected,
+                selectedCategories.includes(category) && styles.categoryButtonTextSelected,
               ]}>
-                {category.label}
+                {category}
               </Text>
             </TouchableOpacity>
           ))}
@@ -398,6 +460,35 @@ const styles = StyleSheet.create({
     marginTop: SIZES.base,
     color: COLORS.gray,
     fontSize: SIZES.font,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SIZES.padding,
+  },
+  cepInput: {
+    flex: 1,
+    height: 50,
+    borderWidth: 1,
+    borderColor: COLORS.gray,
+    borderRadius: SIZES.radius,
+    paddingHorizontal: SIZES.padding,
+    marginBottom: SIZES.padding,
+    fontFamily: FONTS.regular,
+  },
+  cepLoader: {
+    marginLeft: SIZES.padding,
+  },
+  addressContainer: {
+    backgroundColor: COLORS.lightGray,
+    padding: SIZES.padding,
+    borderRadius: SIZES.radius,
+    marginBottom: SIZES.padding,
+  },
+  addressText: {
+    fontFamily: FONTS.regular,
+    color: COLORS.darkgray,
+    marginBottom: 5,
   },
 });
 
