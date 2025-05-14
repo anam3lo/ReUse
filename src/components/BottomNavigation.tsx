@@ -6,7 +6,7 @@ import { RootStackParamList } from '../types/navigation';
 import { StackNavigationProp } from '@react-navigation/stack';
 
 type BottomNavigationProps = {
-  currentScreen: 'trades' | 'profile' | 'product' | 'messages';
+  currentScreen: 'trades' | 'profile' | 'product' | 'messages' | 'swipe' | 'matches';
 };
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
@@ -33,15 +33,20 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentScreen }) =>
           ]}
         />
       </TouchableOpacity>
-      <TouchableOpacity style={styles.navItem}>
+
+      <TouchableOpacity 
+        style={styles.navItem}
+        onPress={() => handleNavigate('Swipe')}
+      >
         <Image
-          source={require('../assets/recycling.png')}
+          source={require('../assets/swipe-icon.png')}
           style={[
             styles.navIcon,
-            { tintColor: currentScreen === 'product' ? COLORS.primary : COLORS.gray }
+            { tintColor: currentScreen === 'swipe' ? COLORS.primary : COLORS.gray }
           ]}
         />
       </TouchableOpacity>
+
       <TouchableOpacity 
         style={[styles.navItem, styles.addButton]}
         onPress={() => navigation.navigate('ProductRegistration')}
@@ -51,6 +56,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentScreen }) =>
           style={styles.addIcon}
         />
       </TouchableOpacity>
+
       <TouchableOpacity 
         style={styles.navItem}
         onPress={() => handleNavigate('Messages')}
@@ -63,6 +69,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({ currentScreen }) =>
           ]}
         />
       </TouchableOpacity>
+
       <TouchableOpacity 
         style={styles.navItem}
         onPress={() => handleNavigate('Profile')}
@@ -84,20 +91,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: SIZES.medium,
     backgroundColor: COLORS.white,
+    paddingVertical: 10,
     borderTopWidth: 1,
-    borderTopColor: COLORS.gray + '20',
+    borderTopColor: '#E0E0E0',
   },
   navItem: {
-    alignItems: 'center',
+    padding: 8,
   },
   navIcon: {
     width: 24,
     height: 24,
-  },
-  activeIcon: {
-    tintColor: COLORS.primary,
   },
   addButton: {
     backgroundColor: COLORS.primary,
@@ -106,7 +110,15 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: -25,
+    marginTop: -20,
+    shadowColor: COLORS.black,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   addIcon: {
     width: 24,

@@ -29,9 +29,11 @@ const USER_DATA_KEY = '@user_data';
 // Função auxiliar para gerar token (simulado)
 const generateToken = (length: number = 32): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  return Array.from(crypto.getRandomValues(new Uint8Array(length)))
-    .map((x) => chars[x % chars.length])
-    .join('');
+  let token = '';
+  for (let i = 0; i < length; i++) {
+    token += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return token;
 };
 
 // Verifica se o usuário está autenticado

@@ -14,6 +14,8 @@ import ChatScreen from '../screens/ChatScreen';
 import MessagesScreen from '../screens/MessagesScreen';
 import MatchScreen from '../screens/MatchScreen';
 import FilterScreen from '../screens/FilterScreen';
+import SwipeScreen from '../screens/SwipeScreen';
+import MatchesScreen from '../screens/MatchesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -40,6 +42,8 @@ export function Routes() {
           // Rotas autenticadas
           <>
             <Stack.Screen name="Trades" component={TradesScreen} />
+            <Stack.Screen name="Swipe" component={SwipeScreen} />
+            <Stack.Screen name="Matches" component={MatchesScreen} />
             <Stack.Screen name="ProductRegistration" component={ProductRegistrationScreen} />
             <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} />
             <Stack.Screen name="Profile" component={ProfileScreen} />

@@ -15,47 +15,37 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomNavigation from '../components/BottomNavigation';
 import { COLORS, FONTS, SIZES } from '../constants/theme';
-import { logout } from '../services/auth';
-import { getWeatherByCoordinates } from '../services/externalApis';
+import { useAuth } from '../contexts/AuthContext';
+
+const StarRating = () => {
+  const stars = [1, 2, 3, 4, 5];
+  return (
+    <View style={styles.ratingContainer}>
+      {stars.map((_, index) => (
+        <Ionicons
+          name={index < 4 ? "star" : "star-outline"}
+          size={20}
+          color="#4CAF50"
+        />
+      ))}
+    </View>
+  );
+};
 
 export const ProfileScreen = () => {
   const navigation = useNavigation();
+  const { signOut } = useAuth();
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [weather, setWeather] = useState<any>(null);
   const [loadingWeather, setLoadingWeather] = useState(false);
 
-  useEffect(() => {
-    loadWeatherData();
-  }, []);
-
-  const loadWeatherData = async () => {
-    try {
-      setLoadingWeather(true);
-      
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permissão negada', 'Precisamos da sua localização para mostrar o clima.');
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      const weatherData = await getWeatherByCoordinates(
-        location.coords.latitude,
-        location.coords.longitude
-      );
-      setWeather(weatherData);
-    } catch (error) {
-      console.error('Erro ao carregar dados do clima:', error);
-    } finally {
-      setLoadingWeather(false);
-    }
-  };
-
+     
+  
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -83,21 +73,7 @@ export const ProfileScreen = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              // Usa o serviço de autenticação para fazer logout
-              const success = await logout();
-              
-              if (success) {
-                // Redireciona para a tela de login
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Login' }],
-                });
-              } else {
-                Alert.alert(
-                  'Erro',
-                  'Ocorreu um erro ao sair da conta. Tente novamente.'
-                );
-              }
+              await signOut();
             } catch (error) {
               console.error('Erro ao fazer logout:', error);
               Alert.alert(
@@ -138,16 +114,7 @@ export const ProfileScreen = () => {
       </View>
       <Text style={styles.userName}>Ana Clara</Text>
       <Text style={styles.userEmail}>ana.clara@email.com</Text>
-      <View style={styles.ratingContainer}>
-        {[1, 2, 3, 4, 5].map((star, index) => (
-          <Ionicons
-            key={index}
-            name={index < 4 ? "star" : "star-outline"}
-            size={20}
-            color="#4CAF50"
-          />
-        ))}
-      </View>
+      <StarRating />
     </View>
   );
 

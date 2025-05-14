@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product } from '../types';
 
-const PRODUCTS_KEY = '@reuse_products';
+const PRODUCTS_KEY = '@products';
 
 // Storage keys
 export const STORAGE_KEYS = {
@@ -46,6 +46,7 @@ export const saveProduct = async (product: Omit<Product, 'id' | 'createdAt' | 'u
       id: Math.random().toString(36).substring(7),
       createdAt: new Date(),
       userEmail: email,
+      userName: name,
     };
 
     // Adiciona o novo produto à lista
